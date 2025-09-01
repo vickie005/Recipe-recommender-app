@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Recipe Recommender</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Smart Recipe Recommender</h1>
+    <p>Find budget friendly meals using ingredients you already have!</p>
+  </header>
+
+  <main>
+    <!--Ingridients input-->
+    <section class="form-section">
+      <label for="ingredients">Enter ingredients (comma-separated)</label>
+      <input type="text" id="ingredients" placeholder="eg.chicken, tomatoes, rice">
+
+      <!--Budget slider-->
+      <label for="budget">Select Budget ($): <span id="budget-value">10</span></label>
+      <input type="range" id="budget" min="5" max="100" step="5" value="10">
+
+      <button id="getRecipes">Get Recipes</button>
+    </section>
+
+    <!--Loading Spinner-->
+    <div id="loading" class="hidden">⌛Finding Recipes...</div>
+
+    <!--Error Message-->
+    <div id="error" class="hidden">⚠️No recipes Found within your budget! Try different ingredients or raise your budget.</div>
+
+    <!--Results-->
+    <section id="recipes" class="cards"></section>
+  </main>
+
+  <footer>
+    <p>Built with ❤️ for Hackathon SDG 4-3-2</p>
+  </footer>
+  
+  <script src="script.js"></script>
+</body>
+</html>
