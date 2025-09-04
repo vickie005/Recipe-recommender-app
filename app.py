@@ -1,70 +1,50 @@
-from flask import Flask, jsonify, request
+import os
 import requests
-import mysql.connector
+from flask import Flask, render_template, request
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# --- Database Connection ---
-db = mysql.connector.connect(
-    host="localhost",        
-    user="root",             
-    password="ML@engineer1",
-    database="reciperec_db"
-)
-cursor = db.cursor(dictionary=True)
+API_KEY = os.getenv("SPOONACULAR_API_KEY")
 
-# --- Home Route ---
-@app.route('/')
-def home():
-    return jsonify({"message": "Welcome to Recipe Recommender API!"})
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-# --- Search Recipes by Ingredient ---
-@app.route('/search')
-def search_recipes():
-    ingredient = request.args.get('ingredient')
-    if not ingredient:
-        return jsonify({"error": "Please provide an ingredient"}), 400
+@app.route("/recipes")
+def recipes():
+    query = request.args.get("query")
+    budget = request.args.get("budget", type=int, default=20)
 
-    url = f"https://www.themealdb.com/api/json/v1/1/filter.php?i={ingredient}"
-    response = requests.get(url)
-    data = response.json()
+    url = "https://api.spoonacular.com/recipes/complexSearch"
+    params = {
+        "query": query,
+        "maxPrice": budget,
+        "number": 5,
+        "addRecipeInformation": True,
+        "apiKey": API_KEY
+    }
 
-    # Save query to DB
-    cursor.execute(
-        "INSERT INTO queries (ingredients, budget) VALUES (%s, %s)",
-        (ingredient, 0.0)  # default budget for now
-    )
-    db.commit()
-    query_id = cursor.lastrowid
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
 
-    # Save meals into DB
-    if data["meals"]:
-        for meal in data["meals"]:
-            cursor.execute(
-                "INSERT INTO recipes (query_id, title, ingredients_list, steps, estimated_cost) VALUES (%s, %s, %s, %s, %s)",
-                (query_id, meal["strMeal"], "N/A", "N/A", 0.0) # just storing basics for now
-            )
-        db.commit()
+        recipes = []
+        if "results" in data:
+            for r in data["results"]:
+                recipes.append({
+                    "title": r["title"],
+                    "ingredients": ", ".join([i["name"] for i in r.get("extendedIngredients", [])]),
+                    "cost": r.get("pricePerServing", 0) / 100,  # convert cents to dollars
+                    "img": r.get("image", "https://via.placeholder.com/400")
+                })
 
-    return jsonify(data)
+        return render_template("results.html", query=query, recipes=recipes)
 
-# --- Filter Recipes by Category ---
-@app.route('/category')
-def by_category():
-    category = request.args.get('c')
-    if not category:
-        return jsonify({"error": "Please provide a category"}), 400
+    except Exception as e:
+        return {"error": str(e)}
 
-    url = f"https://www.themealdb.com/api/json/v1/1/filter.php?c={category}"
-    response = requests.get(url)
-    return jsonify(response.json())
-
-# --- Get Recipe Details (ingredients + instructions) ---
-@app.route('/meal/<meal_id>')
-def meal_details(meal_id):
-    url = f"https://www.themealdb.com/api/json/v1/1/lookup.php?i={meal_id}"
-    response = requests.get(url)
-    return jsonify(response.json())
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
