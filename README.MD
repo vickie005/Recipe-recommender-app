@@ -59,5 +59,5 @@ A *web app* that allows users to:
 
 ### 1. Clone repo  
 
-git clone https://github.com/Vickie005/recipe-recommender.git
-cd recipe-recommender
+git clone https://github.com/vickie005/Recipe-recommender-app
+cd Recipe-recommender-app
