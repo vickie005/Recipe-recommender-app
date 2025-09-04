@@ -61,3 +61,5 @@ A *web app* that allows users to:
 
 git clone https://github.com/vickie005/Recipe-recommender-app
 cd Recipe-recommender-app
+
+Open presentations/SDG432_pitch.pptx in PowerPoint or Google Slides to view the interactive pitch with demo video
